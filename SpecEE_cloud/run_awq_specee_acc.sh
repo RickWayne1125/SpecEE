@@ -1,0 +1,2 @@
+CUDA_VISIBLE_DEVICES=0 python EEInference_awq.py --base-model-path TheBloke/Llama-2-7B-Chat-AWQ --draft-model-path yuhuili/EAGLE-llama2-chat-7B --dataset commonsenseqa --task accuracy --predictor-path ./llama-7b 
+CUDA_VISIBLE_DEVICES=0 python EEInference_awq.py --base-model-path TheBloke/Llama-2-7B-Chat-AWQ --draft-model-path yuhuili/EAGLE-llama2-chat-7B --dataset sst2 --task accuracy --predictor-path ./llama-7b 

@@ -1,0 +1,8 @@
+CUDA_VISIBLE_DEVICES=0 python EEInference.py --base-model-path meta-llama/Llama-2-7b-chat-hf --draft-model-path yuhuili/EAGLE-llama2-chat-7B --dataset mt_bench --task speed --predictor-path ./llama-7b 
+CUDA_VISIBLE_DEVICES=0 python EEInference.py --base-model-path meta-llama/Llama-2-7b-chat-hf --draft-model-path yuhuili/EAGLE-llama2-chat-7B --dataset alpaca --task speed --predictor-path ./llama-7b 
+CUDA_VISIBLE_DEVICES=0 python EEInference.py --base-model-path meta-llama/Llama-2-7b-chat-hf --draft-model-path yuhuili/EAGLE-llama2-chat-7B --dataset gsm8k --task speed --predictor-path ./llama-7b 
+CUDA_VISIBLE_DEVICES=0 python EEInference.py --base-model-path meta-llama/Llama-2-7b-chat-hf --draft-model-path yuhuili/EAGLE-llama2-chat-7B --dataset sum --task speed --predictor-path ./llama-7b 
+CUDA_VISIBLE_DEVICES=0 python EEInference.py --base-model-path meta-llama/Llama-2-7b-chat-hf --draft-model-path yuhuili/EAGLE-llama2-chat-7B --dataset qa --task speed --predictor-path ./llama-7b 
+CUDA_VISIBLE_DEVICES=0 python EEInference.py --base-model-path meta-llama/Llama-2-7b-chat-hf --draft-model-path yuhuili/EAGLE-llama2-chat-7B --dataset humaneval --task speed --predictor-path ./llama-7b 
+CUDA_VISIBLE_DEVICES=0 python EEInference.py --base-model-path meta-llama/Llama-2-7b-chat-hf --draft-model-path yuhuili/EAGLE-llama2-chat-7B --dataset commonsenseqa --task accuracy --predictor-path ./llama-7b 
+CUDA_VISIBLE_DEVICES=0 python EEInference.py --base-model-path meta-llama/Llama-2-7b-chat-hf --draft-model-path yuhuili/EAGLE-llama2-chat-7B --dataset sst2 --task accuracy --predictor-path ./llama-7b
