@@ -9,7 +9,7 @@ The SpecEE is implemented based on the HuggingFace framework in the cloud scenar
 Left: SpecEE & Right: llama.cpp
 <div align="center">
     <img src="./SpecEE.gif" alt="SpecEE" width="400">
-    <img src="./llama.cpp.gif" alt="llama.cpp" width="400">
+    <img src="./llamacpp.gif" alt="llama.cpp" width="400">
 </div>
 
 # SpecEE for Edge Scenario
