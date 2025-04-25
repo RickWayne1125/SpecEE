@@ -6,12 +6,12 @@ Paper website: https://arxiv.org/pdf/2504.08850
 The SpecEE is implemented based on the HuggingFace framework in the cloud scenario and the llama.cpp scenario in the edge scenario. We modify the part of code  to support the SpecEE, and we will conduct the faster research iteration in the future.
 
 # Demo
-<!-- ![SpecEE](./SpecEE.gif)
-![llama.cpp](.c) -->
+Left: SpecEE & Right: llama.cpp
 <div align="center">
     <img src="./SpecEE.gif" alt="SpecEE" width="400">
-    <img src="./SpecEE.gif" alt="llama.cpp" width="400">
+    <img src="./llama.cpp.gif" alt="llama.cpp" width="400">
 </div>
+
 # SpecEE for Edge Scenario
 please enter in the SpecEE_PC directory 
 
