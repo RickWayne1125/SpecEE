@@ -56,24 +56,26 @@ def main(args):
         output_ids_tot = 0
         st = time.time()
         torch.cuda.empty_cache()
+        if args.enable_previous_cache:
+            print("Enable previous cache!")
         for i in trange(len(question_list)):
             message = question_list[i]['turns'][0]
-            conv = get_conversation_template("llama-2-chat")  
+            conv = get_conversation_template("llama-2-chat")
             sys_p = "You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."
             conv.system_message = sys_p
             conv.append_message(conv.roles[0], message)
             conv.append_message(conv.roles[1], None)
-            prompt = conv.get_prompt() + " "    
+            prompt = conv.get_prompt() + " "
             input_ids=model.tokenizer([prompt]).input_ids
             seqlen = len(input_ids[0])
             input_ids = torch.as_tensor(input_ids).cuda()
-            output_ids=model(input_ids,max_new_tokens=256,exit_layer_id_list=exit_layer_id_list)
+            output_ids=model(input_ids,max_new_tokens=256,exit_layer_id_list=exit_layer_id_list,enable_previous_cache=args.enable_previous_cache)
             output_ids_tot += len(output_ids[0]) - seqlen
             output=model.tokenizer.decode(output_ids[0])
         ed = time.time()
         spec = output_ids_tot/(ed-st)
         print('SpecEE '+ args.dataset + ' tokens per second :  ',spec)
-        # print('average layer :  ',sum(exit_layer_id_list)/len(exit_layer_id_list))     
+        # print('average layer :  ',sum(exit_layer_id_list)/len(exit_layer_id_list))
         torch.cuda.empty_cache()
         tokenizer = AutoTokenizer.from_pretrained(args.base_model_path)
         model = AutoModelForCausalLM.from_pretrained(args.base_model_path,torch_dtype=torch.float16,device_map="auto",attn_implementation="eager",low_cpu_mem_usage=True)
@@ -84,12 +86,12 @@ def main(args):
         for i in trange(len(question_list)):
             torch.cuda.empty_cache()
             message = question_list[i]['turns'][0]
-            conv = get_conversation_template("llama-2-chat")  
+            conv = get_conversation_template("llama-2-chat")
             sys_p = "You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."
             conv.system_message = sys_p
             conv.append_message(conv.roles[0], message)
             conv.append_message(conv.roles[1], None)
-            prompt = conv.get_prompt() + " "    
+            prompt = conv.get_prompt() + " "
             input_ids=tokenizer([prompt]).input_ids
             seqlen = len(input_ids[0])
             input_ids = torch.as_tensor(input_ids).cuda()
@@ -120,9 +122,9 @@ def main(args):
                 prompt = get_commonsenseqa_prompt(question,options,answers)
                 input_ids=model.tokenizer([prompt]).input_ids
                 input_ids = torch.as_tensor(input_ids).cuda()
-                output_ids=model(input_ids,max_new_tokens=3,exit_layer_id_list=exit_layer_id_list)
+                output_ids=model(input_ids,max_new_tokens=3,exit_layer_id_list=exit_layer_id_list,enable_previous_cache=args.enable_previous_cache)
                 generated_text = model.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-                answer_start_index = len(prompt+"Answer:")     
+                answer_start_index = len(prompt+"Answer:")
                 try:
                     predicted_answer = generated_text[answer_start_index:].strip()[0].upper()
                 except:
@@ -150,7 +152,7 @@ def main(args):
                 input_ids = torch.as_tensor(input_ids).cuda()
                 output_ids=model.generate(input_ids,max_new_tokens=3,temperature=1e-6)
                 generated_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
-                answer_start_index = len(prompt+"Answer:")     
+                answer_start_index = len(prompt+"Answer:")
                 try:
                     predicted_answer = generated_text[answer_start_index:].strip()[0].upper()
                 except:
@@ -188,7 +190,7 @@ def main(args):
                     predicted_answer = generated_text[answer_start_index:].strip()[0]
                 except:
                     predicted_answer = "N/A"
-                if predicted_answer == label:   
+                if predicted_answer == label:
                     correct += 1
                 total +=1
             print("SpecEE Model's accuracy on sst2 is: ",correct/total)
@@ -216,13 +218,13 @@ def main(args):
                     predicted_answer = generated_text[answer_start_index:].strip()[0]
                 except:
                     predicted_answer = "N/A"
-                if predicted_answer == label:   
-                    correct += 1 
-                total += 1 
-            print("HF Model's accuracy on sst2 is: ",correct/total)        
-              
-        
-        
+                if predicted_answer == label:
+                    correct += 1
+                total += 1
+            print("HF Model's accuracy on sst2 is: ",correct/total)
+
+
+
 
 
 if __name__ == "__main__":
@@ -234,6 +236,8 @@ if __name__ == "__main__":
     parser.add_argument("--predictor-path", type=str, default="")
     parser.add_argument("--model-size", type=str,choices=['7B'],default="7B")
     parser.add_argument("--pred-thresholds", type=float,default=0.5)
+    parser.add_argument("--enable-previous-cache", type=bool, default=False)
+
 
     args = parser.parse_args()
     main(args)

@@ -46,9 +46,9 @@ class EEModel(nn.Module):
 
         else:
             self.ea_layer.diff_device = False
-            
+
         self.ea_layer.to(self.base_model.dtype).to(device)
-        
+
     def get_tokenizer(self):
         """Get the tokenizer of the base model.
 
@@ -73,7 +73,13 @@ class EEModel(nn.Module):
         base_model = LlamaForCausalLMEE.from_pretrained(
                 base_model_path, **kwargs
             )
-        base_model.model.predictors = [torch.load(predictor_path+'/model'+str(layer_idx)+'.pth').to(torch.float16) for layer_idx in range(len(base_model.model.layers))]
+        base_model.model.predictors = [
+            torch.load(
+                predictor_path + '/model' + str(layer_idx) + '.pth',
+                weights_only=False  # predictor checkpoints rely on pickled modules
+            ).to(torch.float16)
+            for layer_idx in range(len(base_model.model.layers))
+        ]
         base_model.model.pred_thresholds = pred_thresholds
         configpath=os.path.join(ea_model_path,"config.json")
         model = cls(
@@ -87,14 +93,15 @@ class EEModel(nn.Module):
         model.ea_layer.load_state_dict(ea_layer_state_dict, strict=True)
 
         return model
-    
+
     def forward(
             self,
             input_ids=None,
-            max_new_tokens=10, 
+            max_new_tokens=10,
             exit_layer_id_list = None,
+            enable_previous_cache = False,
     ):
-        
+
         self.ea_layer.reset_kv()
         with torch.inference_mode():
             input_len = input_ids.shape[1]
@@ -106,6 +113,12 @@ class EEModel(nn.Module):
             token = token.to(input_ids.device)
             input_ids = torch.cat((input_ids, token), dim=1)
             topk_index, topk_prob, top_head_weight = self.ea_layer.topK_genrate(hidden_states, input_ids, self.base_model.lm_head)
+
+            if enable_previous_cache:
+                prev_past_key_values = copy.deepcopy(past_key_values)
+                layer_count = len(self.base_model.model.layers)
+                prev_exit_len = len(exit_layer_id_list) if exit_layer_id_list is not None else 0
+
             for _ in range(max_new_tokens - 1):
                 outputs,token = self.base_model.model(
                     input_ids=token,
@@ -118,16 +131,24 @@ class EEModel(nn.Module):
                     exit_layer_id_list = exit_layer_id_list
                 )
                 hidden_states = outputs[0].clone()
-                past_key_values = outputs[1]
+                if enable_previous_cache:
+                    skipped_layers = False
+                    if exit_layer_id_list is not None:
+                        new_exit_len = len(exit_layer_id_list)
+                        if new_exit_len > prev_exit_len:
+                            skipped_layers = exit_layer_id_list[-1] < layer_count # not the last layer
+                        prev_exit_len = new_exit_len
+                    if skipped_layers:
+                        past_key_values = prev_past_key_values
+                    else:
+                        past_key_values = outputs[1]
+                        prev_past_key_values = copy.deepcopy(past_key_values)
+                else:
+                    past_key_values = outputs[1]
+
                 input_ids = torch.cat((input_ids, token.to(input_ids.device)), dim=1)
-                
+
                 topk_index, topk_prob, top_head_weight = self.ea_layer.topK_genrate(hidden_states, input_ids, self.base_model.lm_head)
                 if self.tokenizer.eos_token_id in input_ids[0, input_len:].tolist():
                     return input_ids
             return input_ids
-                
-                
-                
-            
-            
-            
