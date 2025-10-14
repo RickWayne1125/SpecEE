@@ -1,0 +1,100 @@
+# Python
+__pycache__/*
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Model files
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.gguf
+*.onnx
+*.pb
+
+# Model checkpoints and weights
+checkpoint*/
+checkpoints/
+model_checkpoints/
+models/
+weights/
+*.h5
+
+# Downloaded models (HuggingFace, etc.)
+EAGLE-llama2-chat-7B/
+Llama-2-7b-chat-hf/
+*-AWQ/
+llama-7b/*.bin
+llama-7b/*.pt
+llama-7b/*.pth
+llama-7b/*.safetensors
+
+# Datasets
+benchmark/*/data/
+*.parquet
+*.arrow
+*.csv
+*.jsonl
+data/
+datasets/
+
+# Cache directories
+.cache/
+__pycache__/
+*.cache
+.pytest_cache/
+.mypy_cache/
+
+# Logs
+*.log
+logs/
+wandb/
+runs/
+*.out
+*.err
+
+# Results and outputs
+results/
+outputs/
+output/
+*.json
+!requirements*.json
+!config.json
+!package.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db
