@@ -115,7 +115,6 @@ class EEModel(nn.Module):
             topk_index, topk_prob, top_head_weight = self.ea_layer.topK_genrate(hidden_states, input_ids, self.base_model.lm_head)
 
             if enable_previous_cache:
-                prev_past_key_values = copy.deepcopy(past_key_values)
                 layer_count = len(self.base_model.model.layers)
                 prev_exit_len = len(exit_layer_id_list) if exit_layer_id_list is not None else 0
 
@@ -131,6 +130,9 @@ class EEModel(nn.Module):
                     exit_layer_id_list = exit_layer_id_list
                 )
                 hidden_states = outputs[0].clone()
+                past_key_values = outputs[1]
+
+                # fill missing layers cache, ignore computation accuracy
                 if enable_previous_cache:
                     skipped_layers = False
                     if exit_layer_id_list is not None:
@@ -138,13 +140,18 @@ class EEModel(nn.Module):
                         if new_exit_len > prev_exit_len:
                             skipped_layers = exit_layer_id_list[-1] < layer_count # not the last layer
                         prev_exit_len = new_exit_len
+
                     if skipped_layers:
-                        past_key_values = prev_past_key_values
-                    else:
-                        past_key_values = outputs[1]
-                        prev_past_key_values = copy.deepcopy(past_key_values)
-                else:
-                    past_key_values = outputs[1]
+                        # print("skipped layers, use previous cache")
+                        past_key_values = list(past_key_values)
+                        for skip_layer_id in range(exit_layer_id_list[-1], layer_count):
+                            # print(f"skip layer {skip_layer_id}, shape {past_key_values[skip_layer_id][0].shape}")
+                            # borrow previous **token** cache
+                            key_cache = torch.cat([past_key_values[skip_layer_id][0], past_key_values[skip_layer_id][0][:, :, -1:, :]], dim=2)
+                            value_cache = torch.cat([past_key_values[skip_layer_id][1], past_key_values[skip_layer_id][1][:, :, -1:, :]], dim=2)
+                            past_key_values[skip_layer_id] = (key_cache, value_cache)
+                            # print(f"skip layer {skip_layerid}, shape {past_key_values[skip_layer_id][0].shape}")
+                        past_key_values = tuple(past_key_values)
 
                 input_ids = torch.cat((input_ids, token.to(input_ids.device)), dim=1)
 
